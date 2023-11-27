@@ -1,0 +1,7 @@
+PREFIX y: <http://yago-knowledge.org/resource/>
+SELECT ?a1 ?a2 ?movie ?name1 ?name2 WHERE{
+	?a1 y:hasFamilyName ?name1 .
+	?a2 y:hasFamilyName ?name2 .
+	?a1 y:actedIn ?movie .
+	?a2 y:actedIn ?movie .
+}

@@ -1,0 +1,8 @@
+PREFIX y: <http://yago-knowledge.org/resource/>
+SELECT ?p1 ?p2 ?city ?name1 ?name2 WHERE{
+	?p1 y:hasFamilyName ?name1 .
+	?p2 y:hasFamilyName ?name2 .
+	?p1 y:isMarriedTo ?p2 .
+	?p1 y:wasBornIn ?city .
+	?p2 y:wasBornIn ?city .
+}

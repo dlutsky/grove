@@ -1,0 +1,12 @@
+PREFIX y: <http://yago-knowledge.org/resource/>
+SELECT * WHERE {
+	?country y:hasCapital ?city.
+	?country y:hasGDP ?gdp.
+	?country y:hasNumberOfPeople ?pop.
+	?country y:hasOfficialLanguage ?lang.
+	?country y:hasCurrency ?cy.
+	?country y:hasImport ?imp.
+	?country y:hasExport ?exp.
+	?airport y:isLocatedIn ?city .
+	?airport y:hasAirportCode ?code .
+}

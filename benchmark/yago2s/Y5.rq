@@ -1,0 +1,7 @@
+PREFIX y: <http://yago-knowledge.org/resource/>
+SELECT * WHERE {
+    ?p y:hasAcademicAdvisor ?prof.
+    ?p y:graduatedFrom  ?univ.
+    ?univ y:isLocatedIn ?country.
+    ?country y:hasCapital ?city.
+}

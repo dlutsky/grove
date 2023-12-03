@@ -1,0 +1,14 @@
+PREFIX y: <http://yago-knowledge.org/resource/>
+SELECT * WHERE {
+    ?geo y:hasLongitude ?lon .
+    ?geo y:hasLatitude ?lat .
+    ?geo y:hasArea ?area .
+    ?geo y:linksTo ?lang .
+    ?country y:hasOfficialLanguage ?lang .
+    ?country y:hasNumberOfPeople ?population .
+    ?country y:hasCapital ?capital .
+    ?capital y:linksTo ?inst .
+    ?p y:playsFor ?inst .
+    ?p y:wasBornIn ?city1 .
+    ?p y:diedIn ?city2 . 
+}

@@ -15,9 +15,7 @@ QueryPlan* QueryPlanner::build(const QueryGraph& graph) {
 
   QueryDecomposer docomposer;
   std::vector<GHDNode> nodes;
-  std::cout<<"start decompose"<<std::endl;
   docomposer.decompose(graph, nodes);
-  std::cout<<"finish decompose"<<std::endl;
   std::vector<QuerySolution*> node_solutions(nodes.size());
   for(int i=0; i<nodes.size(); i++) {
     /*

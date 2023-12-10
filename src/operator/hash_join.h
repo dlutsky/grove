@@ -47,8 +47,8 @@ protected:
     int num_keys;
   };
 
-  void build();
-  void probe();
+  bool build();
+  bool probe();
 
   Operator *left, *right;
   std::map<uint32_t, Resource*> left_resources, right_resources;
@@ -59,6 +59,9 @@ protected:
   std::vector<JoinNode> join_nodes;
 
   HashTable hash_table;
+
+  int curr_idx;
+  Resource* right_key_res;
 };
 
 

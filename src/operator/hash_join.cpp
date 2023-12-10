@@ -1,7 +1,7 @@
 #include "hash_join.h"
 
 HashJoin::HashJoin(Operator* left, const std::map<uint32_t, Resource*>& left_resources, Operator* right, const std::map<uint32_t, Resource*>& right_resources, const std::map<uint32_t, Resource*>& output_resources, const std::vector<JoinNode>& join_nodes, double expected_cardinality)
-  : Operator(expected_cardinality), left(left), left_resources(left_resources), right(right), right_resources(right_resources), output_resources(output_resources), join_nodes(join_nodes) {
+  : Operator(expected_cardinality), left(left), left_resources(left_resources), right(right), right_resources(right_resources), output_resources(output_resources), join_nodes(join_nodes), curr_idx(0) {
 }
 
 HashJoin::~HashJoin() {}
@@ -49,13 +49,11 @@ bool HashJoin::first() {
   build();
 
   // probe
-  probe();
-
-  return true;
+  return probe();
 }
 
 bool HashJoin::next() {
-  return false;
+  return probe();
 }
 
 bool HashJoin::seek() {
@@ -66,7 +64,7 @@ double HashJoin::estimateCost() {
   return expected_cardinality;
 }
 
-void HashJoin::build() {
+bool HashJoin::build() {
   for(std::map<uint32_t, Resource*>::iterator iter = output_resources.begin(); iter != output_resources.end(); ++iter) {
     if(!iter->second->column.empty()) {
       for(std::map<uint32_t, Resource*>::iterator it = left_resources.begin(); it != left_resources.end(); ++it) {
@@ -85,46 +83,56 @@ void HashJoin::build() {
     finish:;
   }
 
-  const JoinNode& node = this->join_nodes[0];
-  Resource* key_res = left_resources[node.right_join_key];
+  const JoinNode& left_node = this->join_nodes[0];
+  Resource* left_key_res = left_resources[left_node.right_join_key];
   int i = 0;
   if(left->first()) {
-    for(; i<key_res->column.size(); i++) {
-      this->hash_table.insert(key_res->column[i], i);
+    for(; i<left_key_res->column.size(); i++) {
+      this->hash_table.insert(left_key_res->column[i], i);
     }
     while(left->next()) {
-      for(; i<key_res->column.size(); i++) {
-        this->hash_table.insert(key_res->column[i], i);
+      for(; i<left_key_res->column.size(); i++) {
+        this->hash_table.insert(left_key_res->column[i], i);
       }
     }
   }
-}
 
-void HashJoin::probe() {
-  const JoinNode& node = this->join_nodes[1];
-  Resource* key_res = right_resources[node.left_join_key];
-  this->hash_table.getAllKeys(key_res->column);
+  const JoinNode& right_node = this->join_nodes[1];
+  right_key_res = right_resources[right_node.left_join_key];
+  this->hash_table.getAllKeys(right_key_res->column);
   if(right->first()) {
     while(right->next()) {}
-    Entry* entry = nullptr;
-    for(int i=0; i<key_res->column.size(); i++) {
-      entry = this->hash_table.lookup(key_res->column[i]);
-      int k = 0;
-      while(entry != nullptr) {
-        for(int j=0; j<left_bind_resources.size(); j++) {
-          left_bind_resources[j].second->column.push_back(left_bind_resources[j].first->column[entry->value]);
-        }
-        ++k;
-        entry = entry->next;
-      }
+  }
+  return !right_key_res->column.empty();
+}
 
-      if(k != 0) {
-        for(int j=0; j<right_bind_resources.size(); j++) {
-          right_bind_resources[j].second->column.insert(right_bind_resources[j].second->column.end(), k, right_bind_resources[j].first->column[i]);
-        }
+bool HashJoin::probe() {
+  if(curr_idx >= right_key_res->column.size()) {
+    return false;
+  }
+  Entry* entry = nullptr;
+  while(curr_idx < right_key_res->column.size()) {
+    entry = this->hash_table.lookup(right_key_res->column[curr_idx]);
+    int k = 0;
+    while(entry != nullptr) {
+      for(int j=0; j<left_bind_resources.size(); j++) {
+        left_bind_resources[j].second->column.push_back(left_bind_resources[j].first->column[entry->value]);
+      }
+      ++k;
+      entry = entry->next;
+    }
+
+    if(k != 0) {
+      for(int j=0; j<right_bind_resources.size(); j++) {
+        right_bind_resources[j].second->column.insert(right_bind_resources[j].second->column.end(), k, right_bind_resources[j].first->column[curr_idx]);
       }
     }
+    ++curr_idx;
+    if(curr_idx % 50000 == 0) {
+      return true;
+    }
   }
+  return true;
 }
 
 

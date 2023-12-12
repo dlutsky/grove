@@ -19,7 +19,7 @@ grovetool create watdiv100MDB
 grovetool load watdiv100MDB watdiv100M.nt
 ```
 
-3. *Run Queries*: WatDiv offers a collection of predefined query templates, conveniently accessible within the [watdiv benchmark] (https://github.com/dlutsky/grove/tree/master/benchmark/watdiv), already generated and ready for use.
+3. *Run Queries*: WatDiv offers a collection of predefined query templates, conveniently accessible within the [watdiv benchmark](https://github.com/dlutsky/grove/tree/master/benchmark/watdiv), already generated and ready for use.
 
 ```
 grovetool query watdiv100MDB --input-file=/benchmark/watdiv/100M/S1.rq

@@ -164,59 +164,49 @@ QueryPlanner::QuerySolution* QueryPlanner::buildAcyclicJoin(const QueryGraph& gr
                 node = createBackProbeHashJoinNode(child_nodes, join_nodes, join_res, available_res);
                 node->head = left->head;
                 node->tail = right_res;
-              } else {
-                /*
-                if(i > 3) {
-                  left = left->next;
-                  continue;
-                }
-                */
               }
 
-              //if(i<=3) {
-              if(true) {
-                if(left->cardinality < right->cardinality) {
-                  std::vector<PlanNode*> child_nodes;
-                  std::vector<JoinNode> join_nodes;
-                  std::vector<uint32_t> join_res;
+              if(left->cardinality < right->cardinality) {
+                std::vector<PlanNode*> child_nodes;
+                std::vector<JoinNode> join_nodes;
+                std::vector<uint32_t> join_res;
 
-                  child_nodes.push_back(left);
-                  join_nodes.push_back(JoinNode(UINT32_MAX, join_key));
+                child_nodes.push_back(left);
+                join_nodes.push_back(JoinNode(UINT32_MAX, join_key));
                 
-                  child_nodes.push_back(right);
-                  join_nodes.push_back(JoinNode(join_key, join_key));
+                child_nodes.push_back(right);
+                join_nodes.push_back(JoinNode(join_key, join_key));
                 
-                  join_res.push_back(join_key);
+                join_res.push_back(join_key);
                 
-                  BitSet available_res = left_res|right_res;
+                BitSet available_res = left_res|right_res;
                 
-                  PlanNode* hash_node = createHashJoinNode(child_nodes, join_nodes, join_res, available_res);
-                  hash_node->head = left_res;
-                  hash_node->tail = right_res;
-                  if(node == nullptr || hash_node->costs < node->costs) {
-                    node = hash_node;
-                  }
-                } else {
-                  std::vector<PlanNode*> child_nodes;
-                  std::vector<JoinNode> join_nodes;
-                  std::vector<uint32_t> join_res;
+                PlanNode* hash_node = createHashJoinNode(child_nodes, join_nodes, join_res, available_res);
+                hash_node->head = left_res;
+                hash_node->tail = right_res;
+                if(node == nullptr || hash_node->costs < node->costs) {
+                  node = hash_node;
+                }
+              } else {
+                std::vector<PlanNode*> child_nodes;
+                std::vector<JoinNode> join_nodes;
+                std::vector<uint32_t> join_res;
 
-                  child_nodes.push_back(right);
-                  join_nodes.push_back(JoinNode(UINT32_MAX, join_key));
+                child_nodes.push_back(right);
+                join_nodes.push_back(JoinNode(UINT32_MAX, join_key));
                 
-                  join_res.push_back(join_key);
+                join_res.push_back(join_key);
                 
-                  child_nodes.push_back(left);
-                  join_nodes.push_back(JoinNode(join_key, join_key));
+                child_nodes.push_back(left);
+                join_nodes.push_back(JoinNode(join_key, join_key));
                 
-                  BitSet available_res = left_res|right_res;
+                BitSet available_res = left_res|right_res;
                 
-                  PlanNode* hash_node = createHashJoinNode(child_nodes, join_nodes, join_res, available_res);
-                  hash_node->head = right_res;
-                  hash_node->tail = left_res;
-                  if(node == nullptr || hash_node->costs < node->costs) {
-                    node = hash_node;
-                  }
+                PlanNode* hash_node = createHashJoinNode(child_nodes, join_nodes, join_res, available_res);
+                hash_node->head = right_res;
+                hash_node->tail = left_res;
+                if(node == nullptr || hash_node->costs < node->costs) {
+                  node = hash_node;
                 }
               }
             } else {
@@ -262,12 +252,6 @@ QueryPlanner::QuerySolution* QueryPlanner::buildAcyclicJoin(const QueryGraph& gr
             // prune
             if(exist){
               if(node->costs < solution->root->costs) {
-                if(i == child_solutions.size()) {
-                  QueryPlan qplan;
-                  qplan.root = solution->root;
-                  qplan.print();
-                }
-                
                 solution->root = node;
               }
             } else {
@@ -539,17 +523,19 @@ PlanNode* QueryPlanner::createHashJoinNode(const std::vector<PlanNode*>& child_n
     }
   }
   uint32_t join_key = join_res[0];
-  /*
-  if(node->child_nodes[0]->query_node.predicate.id == node->child_nodes[1]->query_node.predicate.id) {
-    node->cardinality = std::min(node->child_nodes[1]->cardinality, node->child_nodes[0]->cardinality*node->child_nodes[0]->densities[join_key]);
+  if((node->child_nodes[0]->op == PlanNode::TableScan || node->child_nodes[0]->op == PlanNode::TripleIndexLookup || node->child_nodes[0]->op == PlanNode::Filter)
+      && (node->child_nodes[1]->op == PlanNode::TableScan || node->child_nodes[1]->op == PlanNode::TripleIndexLookup || node->child_nodes[1]->op == PlanNode::Filter) 
+      && node->child_nodes[0]->query_node.predicate.id == node->child_nodes[1]->query_node.predicate.id) {
+    node->cardinality = std::min(node->child_nodes[1]->cardinality, node->child_nodes[0]->cardinality/node->child_nodes[0]->densities[join_key]);
+    node->costs = node->child_nodes[0]->costs + node->child_nodes[0]->cardinality + node->child_nodes[1]->costs + child_nodes[1]->cardinality;
   } else {
     node->cardinality = std::min(node->child_nodes[1]->cardinality, node->child_nodes[0]->cardinality*node->child_nodes[0]->densities[join_key]/node->child_nodes[1]->densities[join_key]);
+    node->costs = node->child_nodes[0]->costs + node->child_nodes[0]->cardinality + node->child_nodes[1]->costs + std::min(child_nodes[1]->cardinality, node->child_nodes[0]->cardinality*child_nodes[0]->densities[join_nodes[1].left_join_key]*20);
   }
-  */
-  node->cardinality = std::min(node->child_nodes[1]->cardinality, node->child_nodes[0]->cardinality*node->child_nodes[0]->densities[join_key]/node->child_nodes[1]->densities[join_key]);
+  // node->cardinality = std::min(node->child_nodes[1]->cardinality, node->child_nodes[0]->cardinality*node->child_nodes[0]->densities[join_key]/node->child_nodes[1]->densities[join_key]);
   // Todo: calculate costs
   // node->costs = node->child_nodes[0]->costs + node->child_nodes[0]->cardinality + node->child_nodes[1]->costs + std::min(child_nodes[1]->cardinality, node->cardinality*20);
-  node->costs = node->child_nodes[0]->costs + node->child_nodes[0]->cardinality + node->child_nodes[1]->costs + std::min(child_nodes[1]->cardinality, node->child_nodes[0]->cardinality*child_nodes[0]->densities[join_nodes[1].left_join_key]*20);
+  // node->costs = node->child_nodes[0]->costs + node->child_nodes[0]->cardinality + node->child_nodes[1]->costs + std::min(child_nodes[1]->cardinality, node->child_nodes[0]->cardinality*child_nodes[0]->densities[join_nodes[1].left_join_key]*20);
   return node;
 }
 
@@ -568,15 +554,22 @@ PlanNode* QueryPlanner::createBackProbeHashJoinNode(const std::vector<PlanNode*>
   }
   double cardinality = child_nodes[0]->cardinality;
   for(int x=1; x<child_nodes.size(); ++x) {
-    // node->costs += child_nodes[x]->costs + std::min(child_nodes[x]->cardinality, cardinality*20);
-    node->costs += child_nodes[x]->costs + std::min(child_nodes[x]->cardinality, cardinality*child_nodes[x-1]->densities[join_nodes[x].left_join_key]*20);
-    // node->costs += child_nodes[x]->costs + cardinality;
+    if((node->child_nodes[x-1]->op == PlanNode::TableScan || node->child_nodes[x-1]->op == PlanNode::TripleIndexLookup || node->child_nodes[x-1]->op == PlanNode::Filter)
+        && (node->child_nodes[x]->op == PlanNode::TableScan || node->child_nodes[x]->op == PlanNode::TripleIndexLookup || node->child_nodes[x]->op == PlanNode::Filter) 
+        && node->child_nodes[x-1]->query_node.predicate.id == node->child_nodes[x]->query_node.predicate.id) {
+      node->costs += child_nodes[x]->costs + child_nodes[x]->cardinality*2;
+    } else {
+      node->costs += child_nodes[x]->costs + std::min(child_nodes[x]->cardinality, cardinality*child_nodes[x-1]->densities[join_nodes[x].left_join_key]*20);
+    }
+    
+    //node->costs += child_nodes[x]->costs + std::min(child_nodes[x]->cardinality, cardinality*child_nodes[x-1]->densities[join_nodes[x].left_join_key]*20);
     cardinality = child_nodes[x]->cardinality;
     for(BitSet::SetBitIterator iter = child_nodes[x]->available_res.begin(); iter != child_nodes[x]->available_res.end(); ++iter) {
       if(distinct_counts.count(*iter)) {
         cardinality = std::min(cardinality, distinct_counts[*iter]/child_nodes[x]->densities[*iter]);
       }
     }
+
     for(BitSet::SetBitIterator iter = child_nodes[x]->available_res.begin(); iter != child_nodes[x]->available_res.end(); ++iter) {
       if(distinct_counts.count(*iter)) {
         distinct_counts[*iter] = std::min(distinct_counts[*iter], cardinality*child_nodes[x]->densities[*iter]);

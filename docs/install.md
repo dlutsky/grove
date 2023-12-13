@@ -6,7 +6,7 @@ Install the packages
 
 * gdb: package libdb++-dev in Debian
 
-* yaml-cpp: libyaml-cpp-dev in Debian
+* yaml-cpp: package libyaml-cpp-dev in Debian
 
 * [rocksdb](https://github.com/facebook/rocksdb):
     ```
@@ -30,8 +30,8 @@ Install the packages
 
 ### Install from source on Linux
 
-    ```
-    git clone https://github.com/dlutsky/grove.git
-    cd grove
-    make
-    ```
+```
+git clone https://github.com/dlutsky/grove.git
+cd grove
+make
+```

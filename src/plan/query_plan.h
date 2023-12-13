@@ -34,7 +34,7 @@ struct JoinNode {
 };
 
 struct PlanNode {
-  enum Operator { TableScan, TripleIndexLookup, AggregatedIndexScan, AggregatedIndexLookup, Switch, Filter, HashJoin, BackProbeHashJoin, LeapFrogTrieJoin, ResultsPrinter };
+  enum Operator { TableScan, TripleIndexLookup, Switch, Filter, HashJoin, BackProbeHashJoin, LeapFrogTrieJoin, ResultsPrinter };
   Operator op;
 
   PlanNode* next;

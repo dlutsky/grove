@@ -33,14 +33,6 @@ std::ostream& operator<<(std::ostream& out, PlanNode* node) {
       out << "->  Triple Index lookup";
       out << "[" << "pattern=" << node->node_index << " order=" << node->triple_order << " cardinality=" << node->cardinality << " cost=" << node->costs << "]";
       break;
-    case PlanNode::AggregatedIndexScan:
-      out << "->  Aggregated Index Scan";
-      out << "[" << "pattern=" << node->node_index << " order=" << node->triple_order << " cardinality=" << node->cardinality << " cost=" << node->costs << "]";
-      break;
-    case PlanNode::AggregatedIndexLookup:
-      out << "->  Aggregated Index lookup";
-      out << "[" << "pattern=" << node->node_index << " order=" << node->triple_order << " cardinality=" << node->cardinality << " cost=" << node->costs << "]";
-      break;
     case PlanNode::Switch:
       out << "->  Switch";
       out << "[" << "pattern=" << node->node_index << " cardinality=" << node->cardinality << " cost=" << node->costs << "]";
